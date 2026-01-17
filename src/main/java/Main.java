@@ -27,7 +27,7 @@ public class Main {
 
       int correlationId = ByteBuffer.wrap(buffer, 8, 4).getInt();
 
-      sendCorrelationID(clientSocket, correlationId);codecrafters
+      sendCorrelationID(clientSocket, correlationId);
 
     } catch (IOException e) {
       System.out.println("IOException: " + e.getMessage());
