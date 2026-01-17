@@ -1,6 +1,7 @@
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.nio.ByteBuffer;
 
 import models.Message;
 
@@ -21,7 +22,12 @@ public class Main {
       // Wait for connection from client.
       clientSocket = serverSocket.accept();
 
-      sendCorrelationID(clientSocket);
+      byte[] buffer = new byte[1024];
+      clientSocket.getInputStream().read(buffer);
+
+      int correlationId = ByteBuffer.wrap(buffer, 8, 4).getInt();
+
+      sendCorrelationID(clientSocket, correlationId);codecrafters
 
     } catch (IOException e) {
       System.out.println("IOException: " + e.getMessage());
@@ -36,8 +42,8 @@ public class Main {
     }
   }
 
-  private static void sendCorrelationID(Socket clientSocket) throws IOException {
-    Message message = new Message(0, 7); // message_size: 0, correlation_id: 7
+  private static void sendCorrelationID(Socket clientSocket, int correlationId) throws IOException {
+    Message message = new Message(0, correlationId);
     byte[] responseBytes = message.toBytes();
 
     // Send the response to the client
