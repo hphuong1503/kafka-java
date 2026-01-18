@@ -26,8 +26,13 @@ public class Main {
       clientSocket.getInputStream().read(buffer);
 
       int correlationId = ByteBuffer.wrap(buffer, 8, 4).getInt();
+      short request_api_version = ByteBuffer.wrap(buffer, 6, 2).getShort();
+      int message_size = ByteBuffer.wrap(buffer, 0, 4).getInt();
+      short request_api_key = ByteBuffer.wrap(buffer, 4, 2).getShort();
 
-      sendCorrelationID(clientSocket, correlationId);
+      System.out.println("Received request with API key: " + request_api_key + ", API version: " + request_api_version + ", Correlation ID: " + correlationId + ", Message Size: " + message_size);
+
+      sendCorrelationID(clientSocket, correlationId, request_api_version);
 
     } catch (IOException e) {
       System.out.println("IOException: " + e.getMessage());
@@ -42,12 +47,20 @@ public class Main {
     }
   }
 
-  private static void sendCorrelationID(Socket clientSocket, int correlationId) throws IOException {
+  private static void sendCorrelationID(Socket clientSocket, int correlationId, short request_api_version ) throws IOException {
     Message message = new Message(0, correlationId);
-    byte[] responseBytes = message.toBytes();
+    checkApiVersionAndSetError(request_api_version, message);
 
     // Send the response to the client
-    clientSocket.getOutputStream().write(responseBytes);
+    clientSocket.getOutputStream().write(message.toBytes());
     clientSocket.getOutputStream().flush();
+  }
+
+  private static void checkApiVersionAndSetError(short request_api_version, Message message) {
+    if (request_api_version < 5){
+      message.setErrorCode(Errors.NONE);
+    } else {
+      message.setErrorCode(Errors.UNSUPPORTED_VERSION); 
+    }
   }
 }
